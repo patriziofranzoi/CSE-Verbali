@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE Verbali – Prototipo</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue:#1B4F8A;--blue-light:#E6F1FB;--blue-mid:#B5D4F4;
+  --green:#3B6D11;--green-light:#EAF3DE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --red:#A32D2D;--red-light:#FCEBEB;
+  --text:#1a1a18;--text-sec:#6b6a66;--text-hint:#9e9d99;
+  --border:rgba(0,0,0,0.1);--border-med:rgba(0,0,0,0.18);
+  --bg:#f7f6f2;--bg-card:#fff;--bg-sec:#f1efe8;
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+.shell{display:flex;flex-direction:column;min-height:100vh;max-width:500px;margin:0 auto;background:var(--bg-card);box-shadow:0 0 40px rgba(0,0,0,.08);}
+@media(min-width:900px){
+  body{background:#e2dfd8;display:flex;align-items:flex-start;justify-content:center;padding:2rem;}
+  .shell{max-width:520px;min-height:calc(100vh - 4rem);border-radius:20px;overflow:hidden;}
+}
+.topbar{background:var(--blue);color:#fff;padding:14px 18px 16px;position:sticky;top:0;z-index:100;}
+.topbar-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.topbar h1{font-size:19px;font-weight:600;letter-spacing:-.3px;}
+.topbar .sub{font-size:11px;opacity:.7;margin-top:3px;}
+.tbadge{background:rgba(255,255,255,.2);font-size:10px;padding:3px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+.bnav{background:var(--bg-card);border-top:1px solid var(--border);display:flex;position:sticky;bottom:0;z-index:100;}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 12px;background:none;border:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-size:10px;color:var(--text-hint);}
+.nbtn.active{color:var(--blue);}
+.ndot{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.nbtn.active .ndot{background:var(--blue-light);}
+.screen{display:none;flex:1;overflow-y:auto;padding:14px 16px 28px;}
+.screen.active{display:block;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--text-hint);margin:18px 0 8px;}
+.slabel:first-child{margin-top:2px;}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;margin-bottom:10px;}
+.card.ab{border-color:var(--blue-mid);}
+.card.ar{border-color:#f0a0a0;}
+.card.dashed{border-style:dashed;}
+.ctitle{font-size:14px;font-weight:600;}
+.csub{font-size:12px;color:var(--text-sec);margin-top:3px;}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.bg{background:var(--green-light);color:var(--green);}
+.bb{background:var(--blue-light);color:var(--blue);}
+.ba{background:var(--amber-light);color:var(--amber);}
+.br{background:var(--red-light);color:var(--red);}
+.hero{background:var(--blue);border-radius:var(--r);padding:15px;color:#fff;margin-bottom:12px;}
+.hero .hl{font-size:10px;opacity:.6;letter-spacing:.8px;text-transform:uppercase;}
+.hero .hn{font-size:16px;font-weight:600;margin:4px 0 4px;}
+.hero .ha{font-size:12px;opacity:.8;}
+.hero .hm{display:flex;gap:14px;margin-top:8px;font-size:11px;opacity:.7;flex-wrap:wrap;}
+.pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;}
+.pill{font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);}
+.pill.on{background:rgba(255,255,255,.3);color:#fff;}
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sc{background:var(--bg-sec);border-radius:var(--rs);padding:11px 13px;}
+.sc .sl{font-size:11px;color:var(--text-sec);}
+.sc .sv{font-size:21px;font-weight:600;margin-top:2px;}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
+.dr:last-child{border-bottom:none;}
+.dl{color:var(--text-sec);}
+.dv{font-weight:500;}
+.trow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.trow:last-child{border-bottom:none;}
+.tog{width:40px;height:22px;border-radius:11px;background:var(--border-med);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s;}
+.tog.on{background:var(--blue);}
+.tog::after{content:'';width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.tog.on::after{left:20px;}
+.crow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.crow:last-child{border-bottom:none;}
+.cbox{width:22px;height:22px;border-radius:5px;border:1.5px solid var(--border-med);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;}
+.cbox.si{background:var(--blue);border-color:var(--blue);color:#fff;}
+.cbox.no{background:var(--red-light);border-color:var(--red);color:var(--red);}
+.steprow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.steprow:last-child{border-bottom:none;}
+.stepnum{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;background:var(--bg-sec);color:var(--text-sec);}
+.stepnum.done{background:var(--green-light);color:var(--green);}
+.stepnum.cur{background:var(--blue-light);color:var(--blue);}
+.stitle{font-size:14px;font-weight:500;}
+.sdesc{font-size:11px;color:var(--text-sec);margin-top:3px;}
+.docgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
+.docitem{display:flex;align-items:center;gap:7px;font-size:11px;padding:7px 9px;background:var(--bg-sec);border-radius:var(--rs);cursor:pointer;}
+.docdot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--border-med);flex-shrink:0;}
+.docdot.ok{background:var(--green);border-color:var(--green);}
+.docdot.ko{background:var(--red);border-color:var(--red);}
+.docdot.warn{background:#EF9F27;border-color:#EF9F27;}
+.fotogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px;}
+.fotoslot{aspect-ratio:1;border-radius:var(--rs);border:1px dashed var(--border-med);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--text-hint);cursor:pointer;background:var(--bg-sec);}
+.fotoslot.filled{background:var(--blue-light);border:1px solid var(--blue-mid);font-size:22px;}
+.firma{border:1.5px dashed var(--border-med);border-radius:var(--rs);height:85px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-hint);background:var(--bg-sec);margin-top:8px;}
+.btnp{background:var(--blue);color:#fff;border:none;border-radius:var(--rs);padding:13px;font-size:14px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;width:100%;cursor:pointer;transition:opacity .15s;}
+.btnp:hover{opacity:.88;}
+.btno{background:transparent;color:var(--blue);border:1px solid var(--blue);border-radius:var(--rs);padding:11px;font-size:13px;font-weight:500;font-family:'IBM Plex Sans',sans-serif;width:100%;cursor:pointer;margin-top:8px;}
+.btnsm{flex:1;font-size:11px;padding:8px 4px;border-radius:var(--rs);border:1px solid var(--border-med);background:var(--bg-sec);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;color:var(--text);}
+.btnrow{display:flex;gap:8px;margin-top:10px;}
+.alert{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--rs);font-size:12px;margin-bottom:10px;}
+.alert.warn{background:var(--amber-light);color:var(--amber);}
+.alert.danger{background:var(--red-light);color:var(--red);}
+.inp{width:100%;border:1px solid var(--border-med);border-radius:var(--rs);padding:9px 11px;font-size:13px;color:var(--text);background:var(--bg-card);font-family:'IBM Plex Sans',sans-serif;margin-top:5px;outline:none;}
+.inp:focus{border-color:var(--blue);}
+.ganttrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;}
+.gantlbl{width:105px;flex-shrink:0;color:var(--text-sec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ganttrack{flex:1;height:20px;background:var(--bg-sec);border-radius:4px;position:relative;}
+.gantbar{height:100%;border-radius:4px;position:absolute;display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;}
+.orgwrap{overflow-x:auto;padding:4px 0;}
+.orgchart{min-width:340px;font-size:11px;}
+.orgrow{display:flex;justify-content:center;gap:8px;margin-bottom:0;}
+.orgnode{padding:6px 12px;border-radius:var(--rs);border:1px solid var(--border-med);font-weight:500;font-size:11px;text-align:center;white-space:nowrap;}
+.orgnode.top{background:var(--blue);color:#fff;border-color:var(--blue);min-width:130px;}
+.orgnode.mid{background:var(--blue-light);color:var(--blue);}
+.orgnode.imp{background:var(--green-light);color:var(--green);}
+.orgnode.impw{background:var(--red-light);color:var(--red);}
+.orgline{display:flex;justify-content:center;}
+.orgv{width:1px;height:12px;background:var(--border-med);}
+.orghconn{border-top:1px solid var(--border-med);border-left:1px solid var(--border-med);border-right:1px solid var(--border-med);height:12px;margin:0 60px;}
+.presc{background:var(--amber-light);border-radius:var(--rs);padding:10px 12px;font-size:12px;margin-top:8px;color:var(--amber);border-left:3px solid #EF9F27;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="topbar-row">
+      <div>
+        <h1 id="ttitle">Cantieri</h1>
+        <div class="sub" id="tsub">I tuoi cantieri attivi</div>
+      </div>
+      <div class="tbadge" id="tbadge">CSE</div>
+    </div>
+  </div>
+
+  <!-- CANTIERI -->
+  <div class="screen active" id="s-cantieri">
+    <div class="srow">
+      <div class="sc"><div class="sl">Cantieri attivi</div><div class="sv">3</div></div>
+      <div class="sc"><div class="sl">Verbali questo mese</div><div class="sv">7</div></div>
+    </div>
+    <div class="alert danger">⚠ <strong>1 cantiere</strong> con DURC in scadenza</div>
+    <div class="slabel">Cantieri</div>
+    <div class="card" style="cursor:pointer" onclick="goTo('s-anagrafica','Anagrafica','Via Dante · Costabissara','V-5','anagrafica')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;"><div class="ctitle">Via Dante Alighieri, 9 – Costabissara</div><div class="csub">Griso Lidia · Manutenzione straordinaria</div></div>
+        <span class="badge bg" style="margin-left:8px;flex-shrink:0;">Attivo</span>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text-sec);">
+        <span>Inizio: 15/01/2025</span><span>Verbali: 4</span><span style="color:var(--green);">DURC ✓</span>
+      </div>
+    </div>
+    <div class="card" style="cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;"><div class="ctitle">Via Roma, 42 – Vicenza</div><div class="csub">Condominio Rossi · Ristrutturazione</div></div>
+        <span class="badge ba" style="margin-left:8px;flex-shrink:0;">DURC scad.</span>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text-sec);">
+        <span>Inizio: 03/03/2025</span><span>Verbali: 2</span><span style="color:var(--amber);">Scade 20/03</span>
+      </div>
+    </div>
+    <div class="card" style="cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;"><div class="ctitle">Viale Europa, 15 – Arzignano</div><div class="csub">Bianchi S.r.l. · Nuova costruzione</div></div>
+        <span class="badge bg" style="margin-left:8px;flex-shrink:0;">Attivo</span>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--text-sec);">
+        <span>Inizio: 10/02/2025</span><span>Verbali: 1</span><span style="color:var(--green);">DURC ✓</span>
+      </div>
+    </div>
+    <button class="btno">+ Nuovo cantiere</button>
+  </div>
+
+  <!-- ANAGRAFICA -->
+  <div class="screen" id="s-anagrafica">
+    <div class="hero">
+      <div class="hl">Cantiere</div>
+      <div class="hn">Via Dante Alighieri, 9</div>
+      <div class="ha">Costabissara (VI) · Griso Lidia</div>
+      <div class="hm"><span>Inizio: 15/01/2025</span><span>Fine: 14/07/2025</span><span>€ 128.000</span></div>
+      <div class="pills">
+        <span class="pill on">Ponteggio</span><span class="pill on">Gru</span><span class="pill on">WC</span>
+        <span class="pill on">Baracca</span><span class="pill on">Quadro elett.</span>
+        <span class="pill">Scavi</span><span class="pill">Linee aeree</span>
+      </div>
+    </div>
+
+    <div class="slabel">Figure del cantiere</div>
+    <div class="card">
+      <div class="dr"><span class="dl">CSE</span><span class="dv">Franzoi ing. Patrizio</span></div>
+      <div class="dr"><span class="dl">Committente</span><span class="dv">Griso Lidia</span></div>
+      <div class="dr"><span class="dl">CSP</span><span class="dv">—</span></div>
+      <div class="dr"><span class="dl">Progettista</span><span class="dv">—</span></div>
+      <div class="dr"><span class="dl">Direttore Lavori</span><span class="dv">—</span></div>
+      <div class="dr"><span class="dl">Resp. Lavori</span><span class="dv">—</span></div>
+    </div>
+
+    <div class="slabel">Organigramma</div>
+    <div class="card">
+      <div class="orgwrap">
+        <div class="orgchart">
+          <div class="orgrow"><div class="orgnode top">Griso Lidia<br><span style="font-size:9px;opacity:.8;">(Committente)</span></div></div>
+          <div class="orgline"><div class="orgv"></div></div>
+          <div class="orgrow" style="gap:16px;">
+            <div class="orgnode mid">Franzoi P.<br><span style="font-size:9px;">(CSE)</span></div>
+            <div class="orgnode mid">— <br><span style="font-size:9px;">(DL)</span></div>
+          </div>
+          <div class="orgline" style="margin-left:-70px;"><div class="orgv"></div></div>
+          <div class="orgrow"><div class="orgnode imp">Carboniero Costr.<br><span style="font-size:9px;">(Affidataria)</span></div></div>
+          <div class="orgline"><div class="orghconn"></div></div>
+          <div class="orgrow" style="gap:10px;">
+            <div class="orgnode imp">Rossi Ponteggi<br><span style="font-size:9px;">(Sub)</span></div>
+            <div class="orgnode impw">Elettro Nord<br><span style="font-size:9px;">(Sub)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slabel">Imprese e documentazione</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="ctitle">Carboniero Costruzioni S.r.l.</div><div class="csub">Affidataria · P.IVA 03775030244</div></div>
+        <span class="badge bg">DURC ok</span>
+      </div>
+      <div style="margin-top:8px;">
+        <div class="dr" style="font-size:12px;"><span class="dl">Emissione DURC</span><span>12/11/2024</span></div>
+        <div class="dr" style="font-size:12px;"><span class="dl">Scadenza +120 gg</span><span style="color:var(--green);font-weight:500;">10/03/2025 ✓</span></div>
+      </div>
+      <div class="docgrid">
+        <div class="docitem"><div class="docdot ok"></div>POS</div>
+        <div class="docitem"><div class="docdot ok"></div>DURC</div>
+        <div class="docitem"><div class="docdot ok"></div>Visura camerale</div>
+        <div class="docitem"><div class="docdot ok"></div>Patente a punti</div>
+        <div class="docitem"><div class="docdot warn"></div>Attestati lav.</div>
+        <div class="docitem"><div class="docdot ok"></div>PIMUS</div>
+      </div>
+    </div>
+    <div class="card ar">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="ctitle">Rossi Ponteggi S.r.l.</div><div class="csub">Subappalto di Carboniero · Ponteggi</div></div>
+        <span class="badge br">DURC scad.</span>
+      </div>
+      <div style="margin-top:8px;">
+        <div class="dr" style="font-size:12px;"><span class="dl">Scadenza DURC</span><span style="color:var(--red);font-weight:500;">05/01/2025 · scaduto</span></div>
+      </div>
+      <div class="docgrid">
+        <div class="docitem"><div class="docdot ok"></div>POS</div>
+        <div class="docitem"><div class="docdot ko"></div>DURC</div>
+        <div class="docitem"><div class="docdot ok"></div>Visura camerale</div>
+        <div class="docitem"><div class="docdot ko"></div>Patente a punti</div>
+        <div class="docitem"><div class="docdot ko"></div>Attestati lav.</div>
+        <div class="docitem"><div class="docdot ok"></div>PIMUS</div>
+      </div>
+    </div>
+    <button class="btno">+ Aggiungi impresa / lav. autonomo</button>
+
+    <div class="slabel">Date e importi</div>
+    <div class="card">
+      <div class="dr"><span class="dl">Inizio lavori</span><span class="dv">15/01/2025</span></div>
+      <div class="dr"><span class="dl">Notifica preliminare</span><span class="dv">10/01/2025</span></div>
+      <div class="dr"><span class="dl">Durata prevista</span><span class="dv">180 gg</span></div>
+      <div class="dr"><span class="dl">Fine prevista</span><span class="dv" style="color:var(--amber);">14/07/2025</span></div>
+      <div class="dr"><span class="dl">Importo lavori</span><span class="dv">€ 128.000</span></div>
+      <div class="dr"><span class="dl">Costi sicurezza</span><span class="dv">€ 4.200</span></div>
+    </div>
+
+    <div class="slabel">Documenti cantiere</div>
+    <div class="card">
+      <div class="dr"><span class="dl">PSC</span><span class="badge bg">Caricato</span></div>
+      <div class="dr"><span class="dl">Cronoprogramma</span><span class="badge bg">Caricato</span></div>
+      <div class="dr"><span class="dl">Costi sicurezza</span><span class="badge bg">Caricato</span></div>
+      <div class="dr"><span class="dl">Notifica prelim.</span><span class="badge ba">Da caricare</span></div>
+    </div>
+
+    <button class="btnp" onclick="goTo('s-verbale','Nuovo verbale','Bozza in corso · N°5','N°5','verbale')" style="margin-top:6px;">+ Nuovo verbale di sopralluogo</button>
+  </div>
+
+  <!-- VERBALE (indice steps) -->
+  <div class="screen" id="s-verbale">
+    <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px;">Verbale N°5 · Via Dante, Costabissara · Auto-salvato 14:32</div>
+    <div class="slabel">Flusso compilazione</div>
+    <div class="card">
+      <div class="steprow" onclick="goTo('s-step1','Imprese presenti','N°5 · Step 1 di 6','N°5','verbale')">
+        <div class="stepnum done">✓</div>
+        <div style="flex:1;"><div class="stitle">Imprese e lavoratori presenti</div><div class="sdesc">2 imprese · 4 lavoratori</div></div>
+        <span style="color:var(--text-hint);">›</span>
+      </div>
+      <div class="steprow" onclick="goTo('s-step2','Lavorazioni e Gantt','N°5 · Step 2 di 6','N°5','verbale')">
+        <div class="stepnum done">✓</div>
+        <div style="flex:1;"><div class="stitle">Lavorazioni e cronoprogramma</div><div class="sdesc">3 lavorazioni · Gantt aggiornato</div></div>
+        <span style="color:var(--text-hint);">›</span>
+      </div>
+      <div class="steprow" onclick="goTo('s-step3','Selezione moduli','N°5 · Step 3 di 6','N°5','verbale')">
+        <div class="stepnum cur">3</div>
+        <div style="flex:1;"><div class="stitle" style="color:var(--blue);">Selezione moduli checklist</div><div class="sdesc">Scegli cosa verificare oggi</div></div>
+        <span style="color:var(--blue);">›</span>
+      </div>
+      <div class="steprow" onclick="goTo('s-step4','Checklist sopralluogo','N°5 · Step 4 di 6','N°5','verbale')">
+        <div class="stepnum">4</div>
+        <div style="flex:1;"><div class="stitle" style="color:var(--text-hint);">Compilazione checklist</div><div class="sdesc">Anomalie e prescrizioni</div></div>
+        <span style="color:var(--text-hint);">›</span>
+      </div>
+      <div class="steprow" onclick="goTo('s-step5','Foto cantiere','N°5 · Step 5 di 6','N°5','verbale')">
+        <div class="stepnum">5</div>
+        <div style="flex:1;"><div class="stitle" style="color:var(--text-hint);">Foto cantiere</div><div class="sdesc">Scatta o carica dalla galleria</div></div>
+        <span style="color:var(--text-hint);">›</span>
+      </div>
+      <div class="steprow" onclick="goTo('s-step6','Anteprima e firme','N°5 · Step 6 di 6','N°5','verbale')">
+        <div class="stepnum">6</div>
+        <div style="flex:1;"><div class="stitle" style="color:var(--text-hint);">Anteprima e firme digitali</div><div class="sdesc">Firma + salva / archivia</div></div>
+        <span style="color:var(--text-hint);">›</span>
+      </div>
+    </div>
+    <button class="btnp" onclick="goTo('s-step3','Selezione moduli','N°5 · Step 3 di 6','N°5','verbale')">Continua → Step 3: Selezione moduli</button>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="screen" id="s-step1">
+    <div class="slabel">Chi è in cantiere oggi</div>
+    <div class="card">
+      <div class="ctitle">Carboniero Costruzioni</div><div class="csub">Affidataria</div>
+      <div style="margin-top:10px;">
+        <div class="dr" style="font-size:12px;"><span class="dl">Resp. cantiere</span><span>Mario Rossi</span></div>
+        <div class="dr" style="font-size:12px;"><span class="dl">N° lavoratori</span><span>3</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Rossi Ponteggi S.r.l.</div><div class="csub">Subappalto</div>
+      <div style="margin-top:10px;">
+        <div class="dr" style="font-size:12px;"><span class="dl">Resp. cantiere</span><span>Luigi Bianchi</span></div>
+        <div class="dr" style="font-size:12px;"><span class="dl">N° lavoratori</span><span>1</span></div>
+      </div>
+    </div>
+    <button class="btno">+ Aggiungi impresa / lav. autonomo</button>
+    <button class="btnp" onclick="goTo('s-step2','Lavorazioni e Gantt','N°5 · Step 2 di 6','N°5','verbale')" style="margin-top:14px;">Avanti → Step 2</button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen" id="s-step2">
+    <div class="slabel">Cronoprogramma dinamico</div>
+    <div class="card">
+      <div class="ganttrow"><div class="gantlbl">Murature int.</div><div class="ganttrack"><div class="gantbar" style="left:0;width:45%;background:#1B4F8A;">Carboniero</div></div></div>
+      <div class="ganttrow"><div class="gantlbl">Intonaci est.</div><div class="ganttrack"><div class="gantbar" style="left:30%;width:40%;background:#378ADD;">Carboniero</div></div></div>
+      <div class="ganttrow"><div class="gantlbl">Ponteggio</div><div class="ganttrack"><div class="gantbar" style="left:10%;width:35%;background:#3B6D11;">Rossi</div></div></div>
+      <div class="ganttrow"><div class="gantlbl">Impianto elett.</div><div class="ganttrack"><div class="gantbar" style="left:40%;width:30%;background:#E24B4A;">Elettro Nord</div></div></div>
+      <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">Rosso = sovrapposizione Intonaci / Impianto</div>
+    </div>
+    <div class="alert warn">⚠ Sovrapposizione rilevata: Intonaci est. / Impianto elett.</div>
+    <div class="slabel">Coordinamento interferenze</div>
+    <div class="card">
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">Le imprese operano in aree distinte e compartimentate</span></div>
+      <div class="crow"><div class="cbox"></div><span style="font-size:12px;">È necessario coordinare le seguenti attività lavorative</span></div>
+      <div class="crow"><div class="cbox"></div><span style="font-size:12px;">Non sussistono rischi di interferenza tra le lavorazioni</span></div>
+    </div>
+    <button class="btnp" onclick="goTo('s-step3','Selezione moduli','N°5 · Step 3 di 6','N°5','verbale')">Avanti → Step 3</button>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen" id="s-step3">
+    <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px;">Seleziona i moduli da includere in questo verbale</div>
+    <div class="slabel">Moduli generali</div>
+    <div class="card">
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Cartello e notifica preliminare</span></div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Cancello e recinzione perimetrale</span></div>
+      <div class="trow"><div class="tog" onclick="this.classList.toggle('on')"></div>
+        <span style="color:var(--text-hint);">Baracca e WC <span class="badge bg" style="font-size:9px;margin-left:4px;">già ok · N°2</span></span>
+      </div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Documentazione sicurezza (PSC, POS)</span></div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>DURC e documentazione imprese</span></div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>DPI lavoratori</span></div>
+    </div>
+    <div class="slabel">Moduli specifici</div>
+    <div class="card">
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Ponteggio (PIMUS, disegno, libretto)</span></div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Gru di cantiere</span></div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Quadro elettrico di cantiere</span></div>
+      <div class="trow"><div class="tog" onclick="this.classList.toggle('on')"></div><span style="color:var(--text-hint);">Scavi e sbancamenti</span></div>
+      <div class="trow"><div class="tog" onclick="this.classList.toggle('on')"></div><span style="color:var(--text-hint);">Linee aeree e sottoservizi</span></div>
+      <div class="trow"><div class="tog on" onclick="this.classList.toggle('on')"></div><span>Lavori in quota</span></div>
+    </div>
+    <button class="btnp" onclick="goTo('s-step4','Checklist sopralluogo','N°5 · Step 4 di 6','N°5','verbale')">Avanti → Step 4: Checklist</button>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="screen" id="s-step4">
+    <div class="slabel">Cartello e notifica</div>
+    <div class="card">
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">Cartello esposto, visibile e completo</span></div>
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">Notifica preliminare esposta all'ingresso</span></div>
+    </div>
+    <div class="slabel">Ponteggio</div>
+    <div class="card">
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">PIMUS presente e aggiornato</span></div>
+      <div class="crow"><div class="cbox no">✗</div><span style="font-size:12px;color:var(--red);">Disegno esecutivo mancante</span></div>
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">Libretto autorizzazione ministeriale presente</span></div>
+    </div>
+    <div class="slabel">Anomalia – Ponteggio · Prescrizioni</div>
+    <div class="card ar">
+      <div class="ctitle" style="font-size:13px;color:var(--red);">Disegno esecutivo ponteggio mancante</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-sec);margin-bottom:6px;">Seleziona prescrizione precompilata:</div>
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">Adeguare il ponteggio metallico integrando il disegno esecutivo</span></div>
+      <div class="crow"><div class="cbox"></div><span style="font-size:12px;">Sospendere lavorazioni sul ponteggio fino a integrazione</span></div>
+      <div class="presc">Prescrizione attiva: adeguare il ponteggio metallico integrando il disegno esecutivo entro 7 giorni.</div>
+      <textarea class="inp" style="margin-top:10px;height:60px;resize:none;" placeholder="Prescrizione personalizzata aggiuntiva..."></textarea>
+    </div>
+    <div class="slabel">DPI lavoratori</div>
+    <div class="card">
+      <div class="crow"><div class="cbox si">✓</div><span style="font-size:12px;">I lavoratori utilizzano correttamente i DPI</span></div>
+    </div>
+    <button class="btnp" onclick="goTo('s-step5','Foto cantiere','N°5 · Step 5 di 6','N°5','verbale')">Avanti → Step 5: Foto</button>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="screen" id="s-step5">
+    <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px;">Le foto con didascalia vengono raggruppate in fondo al verbale</div>
+    <div class="slabel">Foto anomalia – Ponteggio</div>
+    <div class="card">
+      <div class="fotogrid">
+        <div class="fotoslot filled">📷</div>
+        <div class="fotoslot filled">📷</div>
+        <div class="fotoslot">+ foto</div>
+      </div>
+      <input class="inp" placeholder="Didascalia: es. Ponteggio lato nord – disegno mancante">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+        <span style="font-size:11px;color:var(--text-hint);flex:1;">Stampa nel verbale</span>
+        <div class="tog on" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <div class="slabel">Foto generali cantiere</div>
+    <div class="card">
+      <div class="fotogrid">
+        <div class="fotoslot filled">📷</div>
+        <div class="fotoslot">+ foto</div>
+        <div class="fotoslot">+ galleria</div>
+      </div>
+      <input class="inp" placeholder="Didascalia: es. Vista generale cantiere">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+        <span style="font-size:11px;color:var(--text-hint);flex:1;">Stampa nel verbale</span>
+        <div class="tog" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <button class="btnp" onclick="goTo('s-step6','Anteprima e firme','N°5 · Step 6 di 6','N°5','verbale')">Avanti → Step 6: Firme</button>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="screen" id="s-step6">
+    <div class="alert warn">⚠ Mostra l'anteprima all'impresa prima di firmare</div>
+    <button class="btno" style="margin-top:0;margin-bottom:14px;">👁 Anteprima verbale completo</button>
+    <div class="slabel">GPS e ora chiusura</div>
+    <div class="card">
+      <div class="dr"><span class="dl">Posizione rilevata</span><span style="font-size:11px;font-family:'IBM Plex Mono',monospace;">45.5421°N 11.5234°E</span></div>
+      <div class="dr"><span class="dl">Indirizzo</span><span style="font-size:12px;">Via Dante Alighieri, Costabissara</span></div>
+      <div class="dr"><span class="dl">Ora chiusura</span><span>16:45 · 19/03/2026</span></div>
+    </div>
+    <div class="slabel">Firma CSE</div>
+    <div class="card">
+      <div class="dr"><span class="dl">Franzoi ing. Patrizio</span><span class="badge bg">CSE</span></div>
+      <div class="firma">✍ Firma con il dito qui</div>
+    </div>
+    <div class="slabel">Firme imprese</div>
+    <div class="card">
+      <div class="ctitle" style="font-size:13px;">Carboniero Costruzioni – Mario Rossi</div>
+      <div class="firma" style="height:70px;">✍ Firma qui</div>
+    </div>
+    <div class="card">
+      <div class="ctitle" style="font-size:13px;">Rossi Ponteggi – Luigi Bianchi</div>
+      <div class="firma" style="height:70px;">✍ Firma qui</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btnsm" style="padding:13px;font-size:13px;font-weight:500;">💾 Salva bozza</button>
+      <button class="btnp" style="margin-top:0;flex:2;">📦 Salva e archivia</button>
+    </div>
+    <div style="font-size:10px;color:var(--text-hint);text-align:center;margin-top:8px;">"Salva e archivia" è definitivo. Il verbale non sarà più modificabile.</div>
+  </div>
+
+  <!-- ARCHIVIO -->
+  <div class="screen" id="s-archivio">
+    <div class="slabel">Via Dante – Verbali archiviati</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="ctitle">Verbale N°4</div><div class="csub">12/02/2025 · 3 prescrizioni</div></div>
+        <span class="badge bb">Archiviato</span>
+      </div>
+      <div class="btnrow"><button class="btnsm">📄 PDF</button><button class="btnsm">📝 Word</button><button class="btnsm">📤 Condividi</button></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="ctitle">Verbale N°3</div><div class="csub">28/01/2025 · 1 prescrizione</div></div>
+        <span class="badge bb">Archiviato</span>
+      </div>
+      <div class="btnrow"><button class="btnsm">📄 PDF</button><button class="btnsm">📝 Word</button><button class="btnsm">📤 Condividi</button></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="ctitle">Verbale N°2</div><div class="csub">15/01/2025 · 0 prescrizioni</div></div>
+        <span class="badge bb">Archiviato</span>
+      </div>
+      <div class="btnrow"><button class="btnsm">📄 PDF</button><button class="btnsm">📝 Word</button><button class="btnsm">📤 Condividi</button></div>
+    </div>
+    <div class="card ab">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><div class="ctitle">Verbale N°5</div><div class="csub">Ultima modifica: oggi 14:32</div></div>
+        <span class="badge ba">Bozza</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btnp" style="margin:0;flex:2;padding:10px;font-size:13px;" onclick="goTo('s-verbale','Nuovo verbale','Bozza in corso · N°5','N°5','verbale')">Continua compilazione</button>
+        <button style="flex:1;padding:10px;border-radius:var(--rs);border:1px solid #f0a0a0;background:var(--bg-card);cursor:pointer;font-size:11px;color:var(--red);font-family:'IBM Plex Sans',sans-serif;">Archivia</button>
+      </div>
+    </div>
+    <div class="slabel">Carica verbale cartaceo</div>
+    <div class="card dashed" style="cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">📄</div>
+        <div><div class="ctitle">Carica verbale precedente</div><div class="csub">PDF o immagine scansionata</div></div>
+      </div>
+    </div>
+    <div class="slabel">Backup</div>
+    <div class="card">
+      <div class="btnrow">
+        <button class="btnsm" style="padding:11px;">📦 Esporta backup</button>
+        <button class="btnsm" style="padding:11px;">🔄 Ripristina backup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav">
+    <button class="nbtn active" id="nb-cantieri" onclick="switchNav('cantieri')"><div class="ndot">🏗</div><span>Cantieri</span></button>
+    <button class="nbtn" id="nb-anagrafica" onclick="switchNav('anagrafica')"><div class="ndot">👥</div><span>Anagrafica</span></button>
+    <button class="nbtn" id="nb-verbale" onclick="switchNav('verbale')"><div class="ndot">📋</div><span>Verbale</span></button>
+    <button class="nbtn" id="nb-archivio" onclick="switchNav('archivio')"><div class="ndot">🗂</div><span>Archivio</span></button>
+  </div>
+</div>
+
+<script>
+const navMap={
+  cantieri:{screen:'s-cantieri',title:'Cantieri',sub:'I tuoi cantieri attivi',badge:'CSE'},
+  anagrafica:{screen:'s-anagrafica',title:'Anagrafica',sub:'Via Dante · Costabissara',badge:'V-5'},
+  verbale:{screen:'s-verbale',title:'Nuovo verbale',sub:'Bozza in corso · N°5',badge:'N°5'},
+  archivio:{screen:'s-archivio',title:'Archivio verbali',sub:'Via Dante Alighieri',badge:'CSE'},
+};
+function switchNav(key){
+  const cfg=navMap[key];
+  showScreen(cfg.screen,cfg.title,cfg.sub,cfg.badge);
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nb-'+key).classList.add('active');
+}
+function showScreen(id,title,sub,badge){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('ttitle').textContent=title;
+  document.getElementById('tsub').textContent=sub;
+  document.getElementById('tbadge').textContent=badge||'CSE';
+  window.scrollTo(0,0);
+}
+function goTo(screenId,title,sub,badge,navKey){
+  showScreen(screenId,title,sub,badge);
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
+  if(navKey) document.getElementById('nb-'+navKey).classList.add('active');
+}
+</script>
+</body>
+</html>
